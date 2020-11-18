@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1605732226 source:d:\users\user\documents\codeblocks\autoconfigurepowerplan\main.c
+1605735366 source:d:\users\user\documents\codeblocks\autoconfigurepowerplan\main.c
 	<windows.h>
 	<string.h>
 	<stdio.h>
