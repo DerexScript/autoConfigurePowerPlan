@@ -59,7 +59,7 @@ char *concatN(char *str, char *str2) {
     return newSTR;
 }
 
-size_t ReadFunc(char *buffer,size_t b,size_t memb,void *data) {
+size_t ReadFunc(char *buffer, size_t b, size_t memb, void *data) {
     int sizeFile=0;
     if(buffer==NULL) {
         return 0;
@@ -68,45 +68,96 @@ size_t ReadFunc(char *buffer,size_t b,size_t memb,void *data) {
     return fwrite(buffer, b,memb, (FILE*)data);
 }
 
-void downloadF(char *url) {
+int downloadF(char *url) {
+    char tempPath[MAX_PATH];
+    char *tempFullPath = (char *) calloc(MAX_PATH, sizeof(char));;
+    if(tempFullPath == NULL) {
+        printf("Falha na alocacao de memoria!");
+        free(tempFullPath);
+        return 0;
+    }
+    GetTempPathA(sizeof(tempPath), tempPath);
+    tempFullPath = tempPath;
+    tempFullPath = concatN(tempFullPath, (char *)"scheme.pow");
+    tempFullPath = (char *) realloc(tempFullPath, sizeof(char)*strlen(tempFullPath)+1);
+    if(tempFullPath == NULL) {
+        printf("Falha na realocacao de memoria!");
+        free(tempFullPath);
+        return 0;
+    }
     CURL *curl;
-    FILE *file = fopen("c:\\scheme.pow","wb");
+    CURLcode res;
+    FILE *file = fopen(tempFullPath, "wb");
     curl = curl_easy_init();
-    curl_easy_setopt(curl,CURLOPT_URL,url);
-    curl_easy_setopt(curl,CURLOPT_WRITEDATA,file);
-    curl_easy_setopt(curl,CURLOPT_WRITEFUNCTION,ReadFunc);
-    curl_easy_perform(curl);
+    curl_easy_setopt(curl,CURLOPT_URL, url);
+    curl_easy_setopt(curl,CURLOPT_WRITEDATA, file);
+    curl_easy_setopt(curl,CURLOPT_WRITEFUNCTION, ReadFunc);
+    res = curl_easy_perform(curl);
     curl_easy_cleanup(curl);
     fclose(file);
+    free(tempFullPath);
+    if(res == CURLE_OK) {
+        return 1;
+    } else {
+        printf("%i: ", res);
+        return 0;
+    }
 }
 
 int main() {
+    char tempPath[MAX_PATH];
+    GetTempPathA(sizeof(tempPath), tempPath);
     int c = 0;
     int cc = 0;
-    char *bufferFile = (char *) calloc(90, sizeof(char));
-    char *cmdFile = (char *) calloc(90, sizeof(char));
+    char *bufferFile = (char *) calloc(200, sizeof(char));
+    char *cmdCommand = (char *) calloc(200, sizeof(char));
+    char *schemePath = (char *) calloc(200, sizeof(char));
     FILE *checkFile;
     FILE *pFile;
     if(bufferFile == NULL) {
-        printf("Falha na realocacao de memoria!");
-        free(cmdFile);
+        printf("Falha na alocacao de memoria!\n");
+        free(cmdCommand);
+        system("pause");
         return 0;
     }
-    if(cmdFile == NULL) {
-        printf("Falha na realocacao de memoria!");
-        free(cmdFile);
+    if(cmdCommand == NULL) {
+        printf("Falha na alocacao de memoria!\n");
+        free(cmdCommand);
+        system("pause");
         return 0;
     }
-    cmdFile = (char *)"C:\\Windows\\System32\\cmd.exe /c powercfg -SETACTIVE ";
+    schemePath = tempPath;
+    schemePath = concatN(schemePath, (char *)"scheme.pow");
+    schemePath = (char *) realloc(schemePath, sizeof(char)*strlen(schemePath)+1);
+    if(schemePath == NULL) {
+        printf("Falha na realocacao de memoria!1\n");
+        free(schemePath);
+        system("pause");
+        return 0;
+    }
+    cmdCommand = (char *)"C:\\Windows\\System32\\cmd.exe /c powercfg /IMPORT ";
+    cmdCommand = concatN(cmdCommand, tempPath);
+    cmdCommand = concatN(cmdCommand, (char *)"scheme.pow >> log.log");
+    cmdCommand = (char *) realloc(cmdCommand, sizeof(char)*strlen(cmdCommand)+1);
+    if(cmdCommand == NULL) {
+        printf("Falha na realocacao de memoria!1\n");
+        free(cmdCommand);
+        system("pause");
+        return 0;
+    }
     if ((checkFile = fopen("log.log", "r"))) {
         fclose(checkFile);
         DeleteFileA("log.log");
     }
-    downloadF((char *)"http://pected.000webhostapp.com/scheme.pow");
-    myCreateProcess(NULL, NULL, 1, (char *)"C:\\Windows\\System32\\cmd.exe /c powercfg /IMPORT c:\\scheme.pow >> log.log", 1);
+    if (!downloadF((char *)"http://pected.000webhostapp.com/scheme.pow")) {
+        printf("Erro Ao Fazer Download Do Esquema De Energia!\n");
+        system("pause");
+        return 0;
+    }
+    myCreateProcess(NULL, NULL, 1, cmdCommand, 1);
     pFile = fopen("log.log","r");
     if (!pFile) {
-        printf("Erro Ao Abrir Arquivo!");
+        printf("Erro Ao Abrir Arquivo!\n");
         return 0;
     }
     while((cc = getc(pFile)) != EOF) {
@@ -116,8 +167,9 @@ int main() {
     bufferFile[c] = '\0';
     bufferFile = (char *) realloc(bufferFile, sizeof(char)*c);
     if(bufferFile == NULL) {
-        printf("Falha na realocacao de memoria!");
+        printf("Falha na realocacao de memoria!2\n");
         free(bufferFile);
+        system("pause");
         return 0;
     }
     fclose(pFile);
@@ -125,14 +177,28 @@ int main() {
         fclose(checkFile);
         DeleteFileA("log.log");
     }
-    char *aa1 = subStrN(bufferFile, 46, strlen(bufferFile)-1);
-    char *aa2 = concatN(cmdFile, aa1);
-    myCreateProcess(NULL, NULL, 1, aa2, 1);
-    free(aa1);
-    free(aa2);
+    cmdCommand = (char *) realloc(cmdCommand, sizeof(char)*200);
+    if(cmdCommand == NULL) {
+        printf("Falha na realocacao de memoria!3\n");
+        free(cmdCommand);
+        system("pause");
+        return 0;
+    }
+    bufferFile = subStrN(bufferFile, 46, strlen(bufferFile)-1);
+    cmdCommand = (char *)"C:\\Windows\\System32\\cmd.exe /c powercfg -SETACTIVE ";
+    cmdCommand = concatN(cmdCommand, bufferFile);
+    cmdCommand = (char *) realloc(cmdCommand, sizeof(char)*strlen(cmdCommand)+1);
+    if(cmdCommand == NULL) {
+        printf("Falha na realocacao de memoria!4\n");
+        free(cmdCommand);
+        system("pause");
+        return 0;
+    }
+    myCreateProcess(NULL, NULL, 1, cmdCommand, 1);
+    DeleteFileA(schemePath);
     free(bufferFile);
-    free(cmdFile);
-    DeleteFileA("c:\\scheme.pow");
+    free(cmdCommand);
+    free(schemePath);
     system("pause");
     return 0;
 }
