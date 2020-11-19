@@ -32,11 +32,16 @@
 			<Add option="-Wall" />
 		</Compiler>
 		<Linker>
+			<Add option="-lwininet" />
 			<Add library="lib/libcurl.a" />
 			<Add library="lib/libcurl.dll.a" />
 		</Linker>
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="resource.h" />
+		<Unit filename="resources.rc">
+			<Option compilerVar="WINDRES" />
 		</Unit>
 		<Extensions>
 			<lib_finder disable_auto="1" />

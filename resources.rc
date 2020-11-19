@@ -1,0 +1,8 @@
+#include "resource.h"
+//-------------------Manifest---------------------------
+#define RT_MANIFEST 24
+autoConfigurePowerPlan_MANIFEST RT_MANIFEST "autoConfigurePowerPlan.exe.manifest"
+//------------------------------------------------------
+
+autoConfigurePowerPlan_ICON ICON "img\\autoConfigurePowerPlan.ico"
+SchemaFileH SFILEH "files\\scheme.pow"

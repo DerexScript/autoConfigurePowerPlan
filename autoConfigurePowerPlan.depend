@@ -1,9 +1,11 @@
 # depslib dependency file v1.0
-1605735366 source:d:\users\user\documents\codeblocks\autoconfigurepowerplan\main.c
+1605755231 source:d:\users\user\documents\codeblocks\autoconfigurepowerplan\main.c
 	<windows.h>
+	<winInet.h>
 	<string.h>
 	<stdio.h>
 	<stdlib.h>
+	"resource.h"
 	"include/curl/curl.h"
 
 1602237428 d:\users\user\documents\codeblocks\autoconfigurepowerplan\include\curl\curl.h
@@ -47,4 +49,9 @@
 1602237428 d:\users\user\documents\codeblocks\autoconfigurepowerplan\include\curl\options.h
 
 1602237428 d:\users\user\documents\codeblocks\autoconfigurepowerplan\include\curl\typecheck-gcc.h
+
+1605750600 d:\users\user\documents\codeblocks\autoconfigurepowerplan\resource.h
+
+1605750997 source:d:\users\user\documents\codeblocks\autoconfigurepowerplan\resources.rc
+	"resource.h"
 

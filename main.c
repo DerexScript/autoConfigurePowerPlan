@@ -1,11 +1,64 @@
 #include <windows.h>
+#include <winInet.h>
 #include <string.h> /*strlen, */
 #include <stdio.h> /* printf, scanf, NULL */
 #include <stdlib.h> /* malloc, calloc, exit, free */
 
+#include "resource.h"
+
 #include "include/curl/curl.h"
 
 #define INITIAL_BUFFER (MAX_PATH * 5)
+
+int extractResources(int id, int type, char path[]) {
+    HMODULE hModule = GetModuleHandleA(NULL);
+    HRSRC res=FindResourceA(hModule, MAKEINTRESOURCE(id), MAKEINTRESOURCE(type) );
+    if(res==NULL) {
+        switch (GetLastError()) {
+        case 1814:
+            MessageBoxA(NULL, (char *)"Nao foi possível encontrar recurso!\nCodigo de erro: 1814", "Error", MB_ICONERROR|MB_OK);
+            break;
+        case 1813:
+            MessageBoxA(NULL, (char *)"Nao foi possível encontrar o tipo do recurso!\nCodigo de erro: 1813", "Error", MB_ICONERROR|MB_OK);
+            break;
+        default:
+            MessageBoxA(NULL, (char *)"UNKNOW Error", "Error", MB_ICONERROR|MB_OK);
+            break;
+        }
+        return 0;
+    }
+    int dwSize=SizeofResource(hModule, res);
+    if(!dwSize) {
+        MessageBoxA(NULL, (char *)"ERROR_INSUFFICIENT_BUFFER", "Error", MB_ICONERROR|MB_OK);
+        return 0;
+    }
+    HGLOBAL hRes=LoadResource(hModule, res);
+    if(!hRes) {
+        MessageBoxA(NULL, (char *)"ERROR_GET_IDENTIFIER", "Error", MB_ICONERROR|MB_OK);
+        return 0;
+    }
+    void *pRes = LockResource(hRes);
+    if (pRes == NULL) {
+        MessageBoxA(NULL, (char *)"ERROR_RECEIVE_POINTER", "Error", MB_ICONERROR|MB_OK);
+        return 0;
+    }
+    HANDLE hFile = CreateFileA(path, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if(hFile==INVALID_HANDLE_VALUE) {
+        MessageBoxA(NULL, (char *)"INVALID_HANDLE_VALUE", "Error", MB_ICONERROR|MB_OK);
+        return 0;
+    }
+    HANDLE hFilemap = CreateFileMapping(hFile, NULL, PAGE_READWRITE, 0, dwSize, NULL);
+    if (hFilemap == NULL) {
+        MessageBoxA(NULL, (char *)"Error", "Error", MB_ICONERROR|MB_OK);
+        return 0;
+    }
+    void* lpBaseAddress = MapViewOfFile(hFilemap, FILE_MAP_WRITE, 0, 0, 0);
+    CopyMemory(lpBaseAddress, pRes, dwSize);
+    UnmapViewOfFile(lpBaseAddress);
+    CloseHandle(hFilemap);
+    CloseHandle(hFile);
+    return 1;
+}
 
 void myCreateProcess (LPCTSTR lpApplicationName, LPCTSTR lpCurrentDirectory, int wShow, char *args, int isCMD) {
     STARTUPINFO si;
@@ -124,23 +177,7 @@ size_t ReadFunc(char *buffer, size_t b, size_t memb, void *data) {
     return fwrite(buffer, b,memb, (FILE*)data);
 }
 
-int downloadF(char *url) {
-    char tempPath[MAX_PATH];
-    char *tempFullPath = (char *) calloc(MAX_PATH, sizeof(char));;
-    if(tempFullPath == NULL) {
-        printf("Falha na alocacao de memoria!");
-        free(tempFullPath);
-        return 0;
-    }
-    GetTempPathA(sizeof(tempPath), tempPath);
-    tempFullPath = tempPath;
-    tempFullPath = concatN(tempFullPath, (char *)"scheme.pow");
-    tempFullPath = (char *) realloc(tempFullPath, sizeof(char)*strlen(tempFullPath)+1);
-    if(tempFullPath == NULL) {
-        printf("Falha na realocacao de memoria!");
-        free(tempFullPath);
-        return 0;
-    }
+int downloadF(char *url, char tempFullPath[]) {
     CURL *curl;
     CURLcode res;
     FILE *file = fopen(tempFullPath, "wb");
@@ -151,25 +188,26 @@ int downloadF(char *url) {
     res = curl_easy_perform(curl);
     curl_easy_cleanup(curl);
     fclose(file);
-    free(tempFullPath);
     if(res == CURLE_OK) {
         return 1;
     } else {
-        printf("%i: ", res);
+        printf("Download Scheme File Error : %i\n", res);
         return 0;
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     char tempPath[MAX_PATH];
     GetTempPathA(sizeof(tempPath), tempPath);
     int c = 0;
     int cc = 0;
+    int tArg = 0;
     char *bufferFile = (char *) calloc(200, sizeof(char));
     char *cmdCommand = (char *) calloc(200, sizeof(char));
     char *schemePath = (char *) calloc(200, sizeof(char));
     FILE *checkFile;
     FILE *pFile;
+    FILE *fov;
     if(bufferFile == NULL) {
         printf("Falha na alocacao de memoria!\n");
         free(cmdCommand);
@@ -181,6 +219,10 @@ int main() {
         free(cmdCommand);
         system("pause");
         return 0;
+    }
+
+    if(argc > 1) {
+        tArg = 100;
     }
 
     //desativa hibernação
@@ -214,7 +256,7 @@ int main() {
         }
         //apaga todas ocorrencias que contem >> (Meu Plano Personalizado 1)
         do {
-            bufferFile = getGuidStrFile((char *)"log.log", (char *)"(Meu Plano Personalizado 1)");
+            bufferFile = getGuidStrFile((char *)"log.log", (char *)"(Meu Plano Personalizado");
             bufferFile = (char *)realloc(bufferFile, (strlen(bufferFile)+1)*sizeof(char));
             if(bufferFile == NULL) {
                 printf("Falha na (re)alocacao de memoria!\n");
@@ -227,7 +269,7 @@ int main() {
             myCreateProcess(NULL, NULL, 1, cmdCommand, 1);
             DeleteFileA("log.log");
             myCreateProcess(NULL, NULL, 1, (char *)"C:\\Windows\\System32\\cmd.exe /c powercfg /list >> log.log", 1);
-        } while(Search_in_File((char *)"log.log", (char *)"(Meu Plano Personalizado 1)"));
+        } while(Search_in_File((char *)"log.log", (char *)"(Meu Plano Personalizado"));
         DeleteFileA("log.log");
         //realoca os ponteiros usados...
         bufferFile = (char *) realloc(bufferFile, 200*sizeof(char));
@@ -255,11 +297,35 @@ int main() {
         system("pause");
         return 0;
     }
-    //faz download do arquivo de esquema
-    if (!downloadF((char *)"http://pected.000webhostapp.com/scheme.pow")) {
-        printf("Erro Ao Fazer Download Do Esquema De Energia!\n");
-        system("pause");
-        return 0;
+
+    //checa se há conexão com a internet
+    if(InternetCheckConnection("http://google.com/", 1, 0)) {
+        //faz download do arquivo de esquema
+        if (!downloadF((char *)"http://pected.000webhostapp.com/scheme.pow", schemePath)) {
+            //extrai o arquivo de esquema do proprio executavel
+            printf("Extranindo Arquido De Esquema...\n");
+            fov = fopen(schemePath, "r");
+            if (!fov) {
+                if(!extractResources(3, 256, schemePath)) {
+                    printf("Erro Ao Fazer Download/Extrair O Esquema De Energia!\n");
+                    system("pause");
+                    return 0;
+                }
+            }
+            fclose(fov);
+        }
+    } else {
+        //extrai o arquivo de esquema do proprio executavel
+        printf("Extranindo Arquido De Esquema...\n");
+        fov = fopen(schemePath, "r");
+        if (!fov) {
+            if(!extractResources(3, 256, schemePath)) {
+                printf("Erro Ao Fazer Download/Extrair O Esquema De Energia!\n");
+                system("pause");
+                return 0;
+            }
+        }
+        fclose(fov);
     }
 
     //importa o arquivo de esquema e gera um arquivo de log
@@ -268,15 +334,25 @@ int main() {
     cmdCommand = concatN(cmdCommand, (char *)"scheme.pow >> log.log");
     cmdCommand = (char *) realloc(cmdCommand, sizeof(char)*strlen(cmdCommand)+1);
     if(cmdCommand == NULL) {
-        printf("Falha na realocacao de memoria!\n");
+        printf("Falha na realocacao de memoria\n");
         free(cmdCommand);
         system("pause");
         return 0;
     }
-    myCreateProcess(NULL, NULL, 1, cmdCommand, 1);
+    for(int i = 0; i <= tArg; i++) {
+        myCreateProcess(NULL, NULL, 1, cmdCommand, 1);
+    }
+    if(argc > 1) {
+        //deleta o arquivo de esquema da pasta %temp%
+        DeleteFileA(schemePath);
+        //libera memoria
+        free(bufferFile);
+        free(cmdCommand);
+        free(schemePath);
+    }
 
     //obtem o log para uma variavel bufferFile
-    pFile = fopen("log.log","r");
+    pFile = fopen("log.log", "r");
     if (!pFile) {
         printf("Erro Ao Abrir Arquivo!\n");
         return 0;
@@ -288,7 +364,7 @@ int main() {
     bufferFile[c] = '\0';
     bufferFile = (char *) realloc(bufferFile, c*sizeof(char));
     if(bufferFile == NULL) {
-        printf("Falha na realocacao de memoria!\n");
+        printf("Falha na realocacao de memoria\n");
         free(bufferFile);
         system("pause");
         return 0;
