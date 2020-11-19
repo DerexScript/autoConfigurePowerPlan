@@ -349,6 +349,7 @@ int main(int argc, char *argv[]) {
         free(bufferFile);
         free(cmdCommand);
         free(schemePath);
+        return 0;
     }
 
     //obtem o log para uma variavel bufferFile
