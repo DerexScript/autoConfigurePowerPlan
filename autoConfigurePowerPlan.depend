@@ -55,3 +55,59 @@
 1605750997 source:d:\users\user\documents\codeblocks\autoconfigurepowerplan\resources.rc
 	"resource.h"
 
+1618701270 source:c:\users\user\documents\codeblocks\autoconfigurepowerplan\main.c
+	<windows.h>
+	<winInet.h>
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	"resource.h"
+	"include/curl/curl.h"
+
+1617647851 c:\users\user\documents\codeblocks\autoconfigurepowerplan\resource.h
+
+1617152336 c:\users\user\documents\codeblocks\autoconfigurepowerplan\include\curl\curl.h
+	"curlver.h"
+	"system.h"
+	<stdio.h>
+	<limits.h>
+	<osreldate.h>
+	<sys/types.h>
+	<time.h>
+	<winsock2.h>
+	<ws2tcpip.h>
+	<sys/select.h>
+	<sys/socket.h>
+	<sys/time.h>
+	<support/SupportDefs.h>
+	"easy.h"
+	"multi.h"
+	"urlapi.h"
+	"options.h"
+	"typecheck-gcc.h"
+
+1617180716 c:\users\user\documents\codeblocks\autoconfigurepowerplan\include\curl\curlver.h
+
+1615381812 c:\users\user\documents\codeblocks\autoconfigurepowerplan\include\curl\system.h
+	<winsock2.h>
+	<windows.h>
+	<ws2tcpip.h>
+	<sys/types.h>
+	<sys/socket.h>
+	<sys/poll.h>
+
+1611228394 c:\users\user\documents\codeblocks\autoconfigurepowerplan\include\curl\easy.h
+
+1611228394 c:\users\user\documents\codeblocks\autoconfigurepowerplan\include\curl\multi.h
+	"curl.h"
+
+1611228394 c:\users\user\documents\codeblocks\autoconfigurepowerplan\include\curl\urlapi.h
+	"curl.h"
+
+1611228394 c:\users\user\documents\codeblocks\autoconfigurepowerplan\include\curl\options.h
+
+1612488834 c:\users\user\documents\codeblocks\autoconfigurepowerplan\include\curl\typecheck-gcc.h
+
+1617647851 source:c:\users\user\documents\codeblocks\autoconfigurepowerplan\resources.rc
+	"resource.h"
+

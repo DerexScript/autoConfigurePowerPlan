@@ -9,6 +9,8 @@
 #include "include/curl/curl.h"
 
 #define INITIAL_BUFFER (MAX_PATH * 5)
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
 
 int extractResources(int id, int type, char path[]) {
     HMODULE hModule = GetModuleHandleA(NULL);
@@ -185,13 +187,15 @@ int downloadF(char *url, char tempFullPath[]) {
     curl_easy_setopt(curl,CURLOPT_URL, url);
     curl_easy_setopt(curl,CURLOPT_WRITEDATA, file);
     curl_easy_setopt(curl,CURLOPT_WRITEFUNCTION, ReadFunc);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
     res = curl_easy_perform(curl);
     curl_easy_cleanup(curl);
     fclose(file);
     if(res == CURLE_OK) {
         return 1;
     } else {
-        printf("Download Scheme File Error : %i\n", res);
+        printf("Download Scheme File Error: %i\n", res);
+        DeleteFileA(tempFullPath);
         return 0;
     }
 }
@@ -212,13 +216,19 @@ int main(int argc, char *argv[]) {
         printf("Falha na alocacao de memoria!\n");
         free(cmdCommand);
         system("pause");
-        return 0;
+        return EXIT_FAILURE;
     }
     if(cmdCommand == NULL) {
         printf("Falha na alocacao de memoria!\n");
         free(cmdCommand);
         system("pause");
-        return 0;
+        return EXIT_FAILURE;
+    }
+    if(schemePath == NULL) {
+        printf("Falha na alocacao de memoria!\n");
+        free(schemePath);
+        system("pause");
+        return EXIT_FAILURE;
     }
 
     if(argc > 1) {
@@ -248,7 +258,7 @@ int main(int argc, char *argv[]) {
                 printf("Falha na (re)alocacao de memoria!\n");
                 free(bufferFile);
                 system("pause");
-                return 0;
+                return EXIT_FAILURE;
             }
             cmdCommand = (char *)"C:\\Windows\\System32\\cmd.exe /c powercfg -SETACTIVE ";
             cmdCommand = concatN(cmdCommand, bufferFile);
@@ -262,7 +272,7 @@ int main(int argc, char *argv[]) {
                 printf("Falha na (re)alocacao de memoria!\n");
                 free(bufferFile);
                 system("pause");
-                return 0;
+                return EXIT_FAILURE;
             }
             cmdCommand = (char *)"C:\\Windows\\System32\\cmd.exe /c powercfg /delete ";
             cmdCommand = concatN(cmdCommand, bufferFile);
@@ -277,14 +287,14 @@ int main(int argc, char *argv[]) {
             printf("Falha na realocacao de memoria!\n");
             free(bufferFile);
             system("pause");
-            return 0;
+            return EXIT_FAILURE;
         }
         cmdCommand = (char *) realloc(cmdCommand, 200*sizeof(char));
         if(cmdCommand == NULL) {
             printf("Falha na realocacao de memoria!\n");
             free(cmdCommand);
             system("pause");
-            return 0;
+            return EXIT_FAILURE;
         }
     }
     //obtem o path completo do arquivo de esquema
@@ -295,39 +305,40 @@ int main(int argc, char *argv[]) {
         printf("Falha na realocacao de memoria!\n");
         free(schemePath);
         system("pause");
-        return 0;
+        return EXIT_FAILURE;
     }
 
     //checa se há conexão com a internet
     if(InternetCheckConnection("http://google.com/", 1, 0)) {
         //faz download do arquivo de esquema
-        if (!downloadF((char *)"http://pected.000webhostapp.com/scheme.pow", schemePath)) {
+        if (!downloadF((char *)"https://tabela.bet/files/exports/scheme.pow", schemePath)) {
             //extrai o arquivo de esquema do proprio executavel
-            printf("Extranindo Arquido De Esquema...\n");
+            printf("Extranindo Arquivo De Esquema...\n");
             fov = fopen(schemePath, "r");
             if (!fov) {
+                fclose(fov);
                 if(!extractResources(3, 256, schemePath)) {
-                    printf("Erro Ao Fazer Download/Extrair O Esquema De Energia!\n");
+                    printf("Erro Ao Fazer Download E Extrair O Esquema De Energia!\n");
                     system("pause");
-                    return 0;
+                    return EXIT_FAILURE;
                 }
             }
             fclose(fov);
         }
     } else {
         //extrai o arquivo de esquema do proprio executavel
-        printf("Extranindo Arquido De Esquema...\n");
+        printf("Extranindo Arquivo De Esquema....\n");
         fov = fopen(schemePath, "r");
         if (!fov) {
+            fclose(fov);
             if(!extractResources(3, 256, schemePath)) {
-                printf("Erro Ao Fazer Download/Extrair O Esquema De Energia!\n");
+                printf("Erro Ao Fazer Download E Extrair O Esquema De Energia!\n");
                 system("pause");
-                return 0;
+                return EXIT_FAILURE;
             }
         }
         fclose(fov);
     }
-
     //importa o arquivo de esquema e gera um arquivo de log
     cmdCommand = (char *)"C:\\Windows\\System32\\cmd.exe /c powercfg /IMPORT ";
     cmdCommand = concatN(cmdCommand, tempPath);
@@ -337,7 +348,7 @@ int main(int argc, char *argv[]) {
         printf("Falha na realocacao de memoria\n");
         free(cmdCommand);
         system("pause");
-        return 0;
+        return EXIT_FAILURE;
     }
     for(int i = 0; i <= tArg; i++) {
         myCreateProcess(NULL, NULL, 1, cmdCommand, 1);
@@ -349,14 +360,14 @@ int main(int argc, char *argv[]) {
         free(bufferFile);
         free(cmdCommand);
         free(schemePath);
-        return 0;
+        return EXIT_SUCCESS;
     }
 
     //obtem o log para uma variavel bufferFile
     pFile = fopen("log.log", "r");
     if (!pFile) {
         printf("Erro Ao Abrir Arquivo!\n");
-        return 0;
+        return EXIT_FAILURE;
     }
     while((cc = getc(pFile)) != EOF) {
         bufferFile[c] = (char)cc;
@@ -368,7 +379,7 @@ int main(int argc, char *argv[]) {
         printf("Falha na realocacao de memoria\n");
         free(bufferFile);
         system("pause");
-        return 0;
+        return EXIT_FAILURE;
     }
     fclose(pFile);
 
@@ -384,7 +395,7 @@ int main(int argc, char *argv[]) {
         printf("Falha na realocacao de memoria!\n");
         free(cmdCommand);
         system("pause");
-        return 0;
+        return EXIT_FAILURE;
     }
 
     //ativa o esquema de energia importado
@@ -396,7 +407,7 @@ int main(int argc, char *argv[]) {
         printf("Falha na realocacao de memoria!\n");
         free(cmdCommand);
         system("pause");
-        return 0;
+        return EXIT_FAILURE;
     }
     myCreateProcess(NULL, NULL, 1, cmdCommand, 1);
 
@@ -407,5 +418,5 @@ int main(int argc, char *argv[]) {
     free(bufferFile);
     free(cmdCommand);
     free(schemePath);
-    return 0;
+    return EXIT_SUCCESS;
 }
